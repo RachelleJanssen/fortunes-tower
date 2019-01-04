@@ -1,0 +1,458 @@
+{
+	"info": {
+		"_postman_id": "13922c3d-d9a5-4ff8-83a1-a16ffcef71f8",
+		"name": "typescript boilerplate",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "items",
+			"item": [
+				{
+					"name": "sweater",
+					"item": [
+						{
+							"name": "get all sweater items",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "localhost:3000/api/items?type=sweaters",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"api",
+										"items"
+									],
+									"query": [
+										{
+											"key": "type",
+											"value": "sweaters"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Create new sweater",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n\t\"name\": \"my new sweater\",\n\t\"owner\": \"Rachelle\",\n\t\"type\": \"sweater\",\n\t\"renewable\": false,\n\t\"quantity\": 1,\n\t\"details\": \"my one of a kind sweater\",\n\t\"size\": \"L\"\n}"
+								},
+								"url": {
+									"raw": "localhost:3000/api/items",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"api",
+										"items"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get a specific sweater",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n\t\"name\": \"my new sweater\",\n\t\"owner\": \"Rachelle\",\n\t\"type\": \"sweater\",\n\t\"renewable\": false,\n\t\"quantity\": 1,\n\t\"details\": \"my one of a kind sweater\",\n\t\"size\": \"L\"\n}"
+								},
+								"url": {
+									"raw": "localhost:3000/api/items/sweaters/my new sweater",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"api",
+										"items",
+										"sweaters",
+										"my new sweater"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "create more of a specific sweater",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n\t\"quantity\": 1\n}"
+								},
+								"url": {
+									"raw": "localhost:3000/api/items/sweaters/my new sweater",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"api",
+										"items",
+										"sweaters",
+										"my new sweater"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "delete a specific sweater",
+							"request": {
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "localhost:3000/api/items/sweaters/my new sweater/delete",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"api",
+										"items",
+										"sweaters",
+										"my new sweater",
+										"delete"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "destroy a quantity of a specific sweater",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n\t\"quantity\": 1\n}"
+								},
+								"url": {
+									"raw": "localhost:3000/api/items/sweaters/my new sweater/destroy",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"api",
+										"items",
+										"sweaters",
+										"my new sweater",
+										"destroy"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "change the owner of a specific sweater",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n\t\"newOwner\": \"my neighbor\"\n}"
+								},
+								"url": {
+									"raw": "localhost:3000/api/items/sweaters/my new sweater/changeowner",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"api",
+										"items",
+										"sweaters",
+										"my new sweater",
+										"changeowner"
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"_postman_isSubFolder": true
+				},
+				{
+					"name": "jeans",
+					"item": [
+						{
+							"name": "get all jeans",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "localhost:3000/api/items?type=jeans",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"api",
+										"items"
+									],
+									"query": [
+										{
+											"key": "type",
+											"value": "jeans"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Create new jeans",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n\t\"name\": \"my new jeans\",\n\t\"owner\": \"Rachelle\",\n\t\"type\": \"jeans\",\n\t\"renewable\": false,\n\t\"quantity\": 1,\n\t\"details\": \"my one of a kind jeans\",\n\t\"size\": 40\n}"
+								},
+								"url": {
+									"raw": "localhost:3000/api/items",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"api",
+										"items"
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"_postman_isSubFolder": true
+				},
+				{
+					"name": "hat",
+					"item": [
+						{
+							"name": "get all hat items",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "localhost:3000/api/items?type=hats",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"api",
+										"items"
+									],
+									"query": [
+										{
+											"key": "type",
+											"value": "hats"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Create new hat",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n\t\"name\": \"my new cowboy hat\",\n\t\"owner\": \"Rachelle\",\n\t\"type\": \"hat\",\n\t\"hatType\": \"cowboy\",\n\t\"renewable\": false,\n\t\"quantity\": 1,\n\t\"details\": \"my one of a kind cowboy hat\",\n\t\"size\": \"S\"\n}"
+								},
+								"url": {
+									"raw": "localhost:3000/api/items",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"api",
+										"items"
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"_postman_isSubFolder": true
+				},
+				{
+					"name": "all items",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "localhost:3000/api/items",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"items"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "admin",
+			"item": [
+				{
+					"name": "create the local storage",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "localhost:3000/api/admin/createstorage",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"admin",
+								"createstorage"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "reset the local storage",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "localhost:3000/api/admin/resetstorage",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"admin",
+								"resetstorage"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}
