@@ -1,13 +1,13 @@
 // require models
 import { Request, Response } from 'express';
 import { readFileSync, writeFileSync } from 'fs';
-import { Game } from '../../models/game';
+import { fillDeck, Game, IGame } from '../../models/game';
 import { collectionPath } from '../../utils/constants';
-import { functionNotImplementedError } from '../../utils/error/customErrors';
+import { functionNotImplementedError, gameNotFoundError, gameOverError } from '../../utils/error/customErrors';
 import { requestHandler, responseHandler } from '../../utils/express/expressHandler';
 import handleError from '../../utils/express/handleError';
+import { guidGenerator } from '../../utils/number/numberHelpers';
 import { validateRequest } from '../../utils/validation/validateBySchema';
-// import lodash from 'lodash';
 
 // require utilities
 
@@ -35,7 +35,30 @@ export async function createNewGame(req: Request, res: Response): Promise<Respon
     // throw functionNotImplementedError;
     // TODO: a new game contains some body like the amount the player wants to bet
     const request: Request = validateRequest(await requestHandler(req));
-    const game = new Game();
+
+    // INewGame
+    const newGame = {
+      id: guidGenerator(),
+      round: 0,
+      rowStatus: [],
+      rowMessages: [],
+      tableValue: 0,
+      multiplier: request.body.betMultiplier,
+      drawnCards: [[]],
+      deck: fillDeck(),
+    };
+
+    const game = new Game(
+      newGame.id,
+      newGame.round,
+      newGame.rowStatus,
+      newGame.rowMessages,
+      newGame.tableValue,
+      newGame.multiplier,
+      newGame.drawnCards,
+      newGame.deck,
+    );
+
     const storage = JSON.parse(readFileSync(collectionPath, 'utf8'));
 
     storage.games.push(game);
@@ -51,35 +74,53 @@ export async function createNewGame(req: Request, res: Response): Promise<Respon
 
 export async function getGameDetails(req: Request, res: Response): Promise<Response> {
   try {
-    throw functionNotImplementedError;
-    // const request: Request = validateRequest(await requestHandler(req), { bodySchema: newCollectionSchema });
-    // const responseContent = {};
-    // return await responseHandler(res, responseContent, request.headers['content-type']);
+    const request: Request = validateRequest(await requestHandler(req));
+    const { id } = request.params;
+    const storage = JSON.parse(readFileSync(collectionPath, 'utf8'));
+    const game = storage.games.find((gameEntry: Game) => gameEntry.id === id);
+    if (!game) {
+      throw gameNotFoundError;
+    }
+    const responseContent = {
+      game,
+    };
+    return await responseHandler(res, responseContent, request.headers['content-type']);
   } catch (error) {
     return handleError(error, res, req.headers['content-type']);
   }
 }
 
-export async function getCard(req: Request, res: Response): Promise<Response> {
+export async function getCards(req: Request, res: Response): Promise<Response> {
   try {
     // throw functionNotImplementedError;
     const request: Request = validateRequest(await requestHandler(req));
     const { id } = request.params;
 
     const storage = JSON.parse(readFileSync(collectionPath, 'utf8'));
-    const gameIndex: number = storage.games.findIndex((gameEntry: Game) => gameEntry.id === id);
+    // console.log(storage.games);
+    const gameIndex: number = storage.games.findIndex((gameEntry: Game) => {
+      return gameEntry.id === id;
+    });
 
-    const randomCardIndex = Math.floor(Math.random() * storage.games[gameIndex].deck.cards.length);
+    const gameObject: IGame = storage.games[gameIndex];
 
-    const newCardDrawn = storage.games[gameIndex].deck.cards[randomCardIndex];
-    console.log(randomCardIndex);
-    console.log(newCardDrawn);
-    storage.games[gameIndex].deck.cards.splice(randomCardIndex, 1);
-    storage.games[gameIndex].drawnCards.push(newCardDrawn);
+    if (!gameObject) {
+      throw gameNotFoundError;
+    }
+    if (gameObject.rowStatus.find(row => row === false)) {
+      throw gameOverError;
+    }
+
+    const game = Game.fromObject(gameObject);
+
+    game.drawCards();
+
+    storage.games[gameIndex] = game;
+
     writeFileSync(collectionPath, JSON.stringify(storage, undefined, 2));
     // game.deck.cards = lodash.remove(game.deck.cards, card => card.value === )
     const responseContent = {
-      newCardDrawn,
+      game,
       message: 'card drawn',
     };
     return await responseHandler(res, responseContent, request.headers['content-type']);
