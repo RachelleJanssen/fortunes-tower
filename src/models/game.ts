@@ -9,11 +9,11 @@ export class Game {
   }
 
   public id: string;
+  public readonly rowStatus: boolean[] = [];
+  public readonly rowMessages: string[] = [];
+  public readonly tableValue: number = 0;
+  public readonly multiplier: number = 1;
   private round = 1;
-  private rowStatus: boolean[] = [];
-  private rowMessages: string[] = [];
-  private tableValue: number = 0;
-  private multiplier: number = 1;
 
   private drawnCards: number[][];
   private deck: number[];
@@ -45,7 +45,9 @@ export class Game {
       // } else {
         // when we reach this point we didn't get a burn
         // set row status to true
+        // this.rowStatus[this.round] = true;
         // calculate row total
+        // calculateRow(this.drawnCards[this.round]);
         // increment round
     this.round += 1;
     // prepare an empty row for the next round
