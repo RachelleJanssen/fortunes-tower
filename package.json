@@ -45,12 +45,14 @@
   "author": "Rachelle Janssen",
   "license": "ISC",
   "dependencies": {
+    "@types/mongoose": "^5.3.8",
     "@types/node": "^10.12.15",
     "body-parser": "^1.18.3",
     "express": "^4.16.4",
     "express-xml-bodyparser": "^0.3.0",
     "joi": "^14.3.0",
     "lodash": "^4.17.11",
+    "mongoose": "^5.4.5",
     "semver": "^5.6.0",
     "winston": "^3.1.0",
     "winston-daily-rotate-file": "^3.5.1",
@@ -85,6 +87,7 @@
     "tslint-config-prettier": "^1.17.0",
     "tslint-immutable": "^5.0.1",
     "typedoc": "^0.13.0",
+    "typegoose": "^5.4.1",
     "typescript": "^3.2.2",
     "typescript-eslint-parser": "^21.0.2"
   },

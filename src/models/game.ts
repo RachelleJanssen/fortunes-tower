@@ -1,33 +1,44 @@
+import { Document } from 'mongoose';
+import { ModelType, prop, staticMethod, Typegoose } from 'typegoose';
 import { cardValues } from './card';
 
-export class Game {
+class Game extends Typegoose {
 
-  public static fromObject(gameObject: IGame): Game {
-    console.log('from');
-    console.log(gameObject.id);
-    return new this(gameObject.id, gameObject.round, gameObject.rowStatus, gameObject.rowMessages, gameObject.tableValue, gameObject.multiplier, gameObject.drawnCards, gameObject.deck);
-  }
+  // constructor(round: number, rowStatus: boolean[], rowMessages: string[], tableValue: number, multiplier: number, drawnCards: number[][], deck: number[]) {
+  //   super();
+  //   this.round = round;
+  //   this.timestamp = new Date();
+  //   this.rowStatus = rowStatus;
+  //   this.rowMessages = rowMessages;
+  //   this.tableValue = tableValue;
+  //   this.multiplier = multiplier;
+  //   this.drawnCards = drawnCards;
+  //   this.deck = deck;
+  // }
 
-  public id: string;
+  // @staticMethod
+  // tslint:disable-next-line:typedef
+  // public static async findById(this: ModelType<Game>, id: string) {
+  //   return this.findById({ id });
+  // }
+
+  @prop()
   public readonly rowStatus: boolean[] = [];
+  @prop()
   public readonly rowMessages: string[] = [];
+  @prop()
   public readonly tableValue: number = 0;
+  @prop()
   public readonly multiplier: number = 1;
+  @prop()
+  public readonly timestamp: Date = new Date();
+  @prop()
   private round = 1;
 
-  private drawnCards: number[][];
-  private deck: number[];
-
-  constructor(id: string, round: number, rowStatus: boolean[], rowMessages: string[], tableValue: number, multiplier: number, drawnCards: number[][], deck: number[]) {
-    this.id = id;
-    this.round = round;
-    this.rowStatus = rowStatus;
-    this.rowMessages = rowMessages;
-    this.tableValue = tableValue;
-    this.multiplier = multiplier;
-    this.drawnCards = drawnCards;
-    this.deck = deck;
-  }
+  @prop()
+  private drawnCards: number[][] = [];
+  @prop()
+  private deck: number[] = [];
 
   public drawCards(): void {
     for (let index = 0; index <= this.round; index += 1) {
@@ -92,7 +103,7 @@ export function fillDeck(): number[] {
   return deck;
 }
 
-export interface IGame {
+export interface IGame extends Document {
   id: string;
   round: number;
   rowStatus: boolean[];
@@ -102,3 +113,5 @@ export interface IGame {
   drawnCards: number[][];
   deck: number[];
 }
+
+export const gameModel = new Game().getModelForClass(Game);

@@ -1,9 +1,9 @@
 // require models
 import { Request, Response } from 'express';
-import { readFileSync, writeFileSync } from 'fs';
-import { fillDeck, Game, IGame } from '../../models/game';
+import { readFileSync } from 'fs';
+import { fillDeck, gameModel } from '../../models/game';
 import { collectionPath } from '../../utils/constants';
-import { functionNotImplementedError, gameNotFoundError, gameOverError } from '../../utils/error/customErrors';
+import { gameNotFoundError } from '../../utils/error/customErrors';
 import { requestHandler, responseHandler } from '../../utils/express/expressHandler';
 import handleError from '../../utils/express/handleError';
 import { guidGenerator } from '../../utils/number/numberHelpers';
@@ -37,7 +37,7 @@ export async function createNewGame(req: Request, res: Response): Promise<Respon
     const request: Request = validateRequest(await requestHandler(req));
 
     // INewGame
-    const newGame = {
+    const newGame = new gameModel({
       id: guidGenerator(),
       round: 0,
       rowStatus: [],
@@ -46,26 +46,11 @@ export async function createNewGame(req: Request, res: Response): Promise<Respon
       multiplier: request.body.betMultiplier,
       drawnCards: [[]],
       deck: fillDeck(),
-    };
+    });
 
-    const game = new Game(
-      newGame.id,
-      newGame.round,
-      newGame.rowStatus,
-      newGame.rowMessages,
-      newGame.tableValue,
-      newGame.multiplier,
-      newGame.drawnCards,
-      newGame.deck,
-    );
+    newGame.save();
 
-    const storage = JSON.parse(readFileSync(collectionPath, 'utf8'));
-
-    storage.games.push(game);
-
-    writeFileSync(collectionPath, JSON.stringify(storage, undefined, 2));
-
-    const responseContent = game;
+    const responseContent = newGame.toJSON();
     return await responseHandler(res, responseContent, request.headers['content-type']);
   } catch (error) {
     return handleError(error, res, req.headers['content-type']);
@@ -76,77 +61,76 @@ export async function getGameDetails(req: Request, res: Response): Promise<Respo
   try {
     const request: Request = validateRequest(await requestHandler(req));
     const { id } = request.params;
-    const storage = JSON.parse(readFileSync(collectionPath, 'utf8'));
-    const game = storage.games.find((gameEntry: Game) => gameEntry.id === id);
+    const game = await gameModel.findById(id);
+    console.log(game);
     if (!game) {
       throw gameNotFoundError;
     }
-    const responseContent = {
-      game,
-    };
+    const responseContent = game;
+    console.log(responseContent);
     return await responseHandler(res, responseContent, request.headers['content-type']);
   } catch (error) {
     return handleError(error, res, req.headers['content-type']);
   }
 }
 
-export async function getCards(req: Request, res: Response): Promise<Response> {
-  try {
-    // throw functionNotImplementedError;
-    const request: Request = validateRequest(await requestHandler(req));
-    const { id } = request.params;
+// export async function getCards(req: Request, res: Response): Promise<Response> {
+//   try {
+//     // throw functionNotImplementedError;
+//     const request: Request = validateRequest(await requestHandler(req));
+//     const { id } = request.params;
 
-    const storage = JSON.parse(readFileSync(collectionPath, 'utf8'));
-    // console.log(storage.games);
-    const gameIndex: number = storage.games.findIndex((gameEntry: Game) => {
-      return gameEntry.id === id;
-    });
+//     const storage = JSON.parse(readFileSync(collectionPath, 'utf8'));
+//     // console.log(storage.games);
+//     const gameIndex: number = storage.games.findIndex((gameEntry: Game) => {
+//       return gameEntry.id === id;
+//     });
 
-    const gameObject: IGame = storage.games[gameIndex];
+//     const gameObject: IGame = storage.games[gameIndex];
 
-    if (!gameObject) {
-      throw gameNotFoundError;
-    }
-    if (gameObject.rowStatus.find(row => row === false)) {
-      throw gameOverError;
-    }
+//     if (!gameObject) {
+//       throw gameNotFoundError;
+//     }
+//     if (gameObject.rowStatus.find(row => row === false)) {
+//       throw gameOverError;
+//     }
 
-    const game = Game.fromObject(gameObject);
+//     const game = Game.fromObject(gameObject);
 
-    game.drawCards();
+//     game.drawCards();
 
-    storage.games[gameIndex] = game;
+//     storage.games[gameIndex] = game;
 
-    writeFileSync(collectionPath, JSON.stringify(storage, undefined, 2));
-    // game.deck.cards = lodash.remove(game.deck.cards, card => card.value === )
-    const responseContent = {
-      game,
-      message: 'card drawn',
-    };
-    return await responseHandler(res, responseContent, request.headers['content-type']);
-  } catch (error) {
-    return handleError(error, res, req.headers['content-type']);
-  }
-}
+//     writeFileSync(collectionPath, JSON.stringify(storage, undefined, 2));
+//     // game.deck.cards = lodash.remove(game.deck.cards, card => card.value === )
+//     const responseContent = {
+//       game,
+//       message: 'card drawn',
+//     };
+//     return await responseHandler(res, responseContent, request.headers['content-type']);
+//   } catch (error) {
+//     return handleError(error, res, req.headers['content-type']);
+//   }
+// }
 
-export async function holdGame(req: Request, res: Response): Promise<Response> {
-  try {
-    throw functionNotImplementedError;
-    // const request: Request = validateRequest(await requestHandler(req), { bodySchema: newCollectionSchema });
-    // const responseContent = {};
-    // return await responseHandler(res, responseContent, request.headers['content-type']);
-  } catch (error) {
-    return handleError(error, res, req.headers['content-type']);
-  }
-}
+// export async function holdGame(req: Request, res: Response): Promise<Response> {
+//   try {
+//     throw functionNotImplementedError;
+//     // const request: Request = validateRequest(await requestHandler(req), { bodySchema: newCollectionSchema });
+//     // const responseContent = {};
+//     // return await responseHandler(res, responseContent, request.headers['content-type']);
+//   } catch (error) {
+//     return handleError(error, res, req.headers['content-type']);
+//   }
+// }
 
-export async function cashout(req: Request, res: Response): Promise<Response> {
-  try {
-    throw functionNotImplementedError;
-    // const request: Request = validateRequest(await requestHandler(req), { bodySchema: newCollectionSchema });
-    // const responseContent = {};
-    // return await responseHandler(res, responseContent, request.headers['content-type']);
-  } catch (error) {
-    return handleError(error, res, req.headers['content-type']);
-  }
-}
+// export async function cashout(req: Request, res: Response): Promise<Response> {
+//   try {
+//     throw functionNotImplementedError;
+//     // const request: Request = validateRequest(await requestHandler(req), { bodySchema: newCollectionSchema });
+//     // const responseContent = {};
+//     // return await responseHandler(res, responseContent, request.headers['content-type']);
+//   } catch (error) {
+//     return handleError(error, res, req.headers['content-type']);
+//   }
+// }
