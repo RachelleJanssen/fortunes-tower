@@ -1,5 +1,5 @@
 import { Document } from 'mongoose';
-import { ModelType, prop, staticMethod, Typegoose } from 'typegoose';
+import { instanceMethod, prop, Typegoose } from 'typegoose';
 import { cardValues } from './card';
 
 class Game extends Typegoose {
@@ -40,6 +40,7 @@ class Game extends Typegoose {
   @prop()
   private deck: number[] = [];
 
+  @instanceMethod
   public drawCards(): void {
     for (let index = 0; index <= this.round; index += 1) {
       const randomCardIndex = Math.floor(Math.random() * this.deck.length);
