@@ -1,15 +1,16 @@
 // require models
 import { Request, Response } from 'express';
-import { readFileSync } from 'fs';
+
+// require schemas and schema functions
 import { fillDeck, gameModel } from '../../models/game';
-import { collectionPath } from '../../utils/constants';
+
+// require utilities
+import { shuffle } from '../../utils/array/arrayHelpers';
 import { gameNotFoundError, gameOverError } from '../../utils/error/customErrors';
 import { requestHandler, responseHandler } from '../../utils/express/expressHandler';
 import handleError from '../../utils/express/handleError';
 import { guidGenerator } from '../../utils/number/numberHelpers';
 import { validateRequest } from '../../utils/validation/validateBySchema';
-
-// require utilities
 
 /**
  * Get all collections
@@ -20,9 +21,9 @@ export async function listGames(req: Request, res: Response): Promise<Response> 
   try {
     // throw functionNotImplementedError;
     const request: Request = validateRequest(await requestHandler(req));
-    const storage = JSON.parse(readFileSync(collectionPath, 'utf8'));
+    const games = await gameModel.find({});
     const responseContent = {
-      storage,
+      games,
     };
     return await responseHandler(res, responseContent, request.headers['content-type']);
   } catch (error) {
@@ -45,9 +46,10 @@ export async function createNewGame(req: Request, res: Response): Promise<Respon
       tableValue: 0,
       multiplier: request.body.betMultiplier,
       drawnCards: [[]],
-      deck: fillDeck(),
+      deck: shuffle(fillDeck()),
     });
-
+    newGame.drawCards();
+    newGame.drawCards();
     newGame.save();
 
     const responseContent = newGame.toJSON();
@@ -89,6 +91,7 @@ export async function getCards(req: Request, res: Response): Promise<Response> {
     }
 
     game.drawCards();
+    game.checkStatus();
     await gameModel.update({ _id: id }, game);
     const responseContent = {
       game,
