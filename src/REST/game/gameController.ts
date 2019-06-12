@@ -34,7 +34,14 @@ export async function listGames(req: Request, res: Response): Promise<Response> 
 export async function createNewGame(req: Request, res: Response): Promise<Response> {
   try {
     // throw functionNotImplementedError;
-    // TODO: a new game contains some body like the amount the player wants to bet
+    // TODO: a new game API body:
+    /*
+      betAmount
+      deckchoices:
+        Emerald deck: contains 4 Hero cards and 70 numbered cards (10 of each number).
+        Ruby deck: contains 4 Hero cards and 63 numbered cards (9 of each number).
+        Diamond deck: contains 4 Hero cards and 56 numbered cards (8 of each number).
+    */
     const request: Request = validateRequest(await requestHandler(req));
 
     // INewGame
@@ -48,13 +55,18 @@ export async function createNewGame(req: Request, res: Response): Promise<Respon
       drawnCards: [[]],
       deck: shuffle(fillDeck()),
     });
+    // draw the tower card
+    console.log('draw round 0');
     newGame.drawCards();
+    // and the first row
+    console.log('draw round 1');
     newGame.drawCards();
     newGame.save();
-
+    console.log(newGame.deck);
     const responseContent = newGame.toJSON();
     return await responseHandler(res, responseContent, request.headers['content-type']);
   } catch (error) {
+    console.log(error);
     return handleError(error, res, req.headers['content-type']);
   }
 }
@@ -68,7 +80,6 @@ export async function getGameDetails(req: Request, res: Response): Promise<Respo
       throw gameNotFoundError;
     }
     const responseContent = game;
-    console.log(responseContent);
     return await responseHandler(res, responseContent, request.headers['content-type']);
   } catch (error) {
     return handleError(error, res, req.headers['content-type']);
@@ -77,7 +88,6 @@ export async function getGameDetails(req: Request, res: Response): Promise<Respo
 
 export async function getCards(req: Request, res: Response): Promise<Response> {
   try {
-    // throw functionNotImplementedError;
     const request: Request = validateRequest(await requestHandler(req));
     const { id } = request.params;
 
@@ -86,16 +96,15 @@ export async function getCards(req: Request, res: Response): Promise<Response> {
     if (!game) {
       throw gameNotFoundError;
     }
-    if (game.rowStatus.find(row => row === false)) {
+    if (game.rowStatus.includes(true)) {
       throw gameOverError;
     }
 
     game.drawCards();
-    game.checkStatus();
     await gameModel.update({ _id: id }, game);
     const responseContent = {
       game,
-      message: 'card drawn',
+      message: 'cards drawn',
     };
     return await responseHandler(res, responseContent, request.headers['content-type']);
   } catch (error) {
@@ -103,20 +112,17 @@ export async function getCards(req: Request, res: Response): Promise<Response> {
   }
 }
 
-// export async function holdGame(req: Request, res: Response): Promise<Response> {
-//   try {
-//     throw functionNotImplementedError;
-//     // const request: Request = validateRequest(await requestHandler(req), { bodySchema: newCollectionSchema });
-//     // const responseContent = {};
-//     // return await responseHandler(res, responseContent, request.headers['content-type']);
-//   } catch (error) {
-//     return handleError(error, res, req.headers['content-type']);
-//   }
-// }
-
+// TODO: cashout function
 // export async function cashout(req: Request, res: Response): Promise<Response> {
 //   try {
 //     throw functionNotImplementedError;
+//     // TODO: check that game is not game over yet
+
+//     // if game is over
+//     // throw gameOverError
+
+//     // if game is NOT over
+//     // return the row total
 //     // const request: Request = validateRequest(await requestHandler(req), { bodySchema: newCollectionSchema });
 //     // const responseContent = {};
 //     // return await responseHandler(res, responseContent, request.headers['content-type']);
