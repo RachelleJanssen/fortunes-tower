@@ -51,7 +51,8 @@ export async function createNewGame(req: Request, res: Response): Promise<Respon
       rowStatus: [],
       rowMessages: [],
       tableValue: 0,
-      multiplier: request.body.betMultiplier,
+      betMultiplier: request.body.betMultiplier,
+      multiplier: [1],
       drawnCards: [[]],
       deck: shuffle(fillDeck()),
     });
@@ -62,7 +63,7 @@ export async function createNewGame(req: Request, res: Response): Promise<Respon
     console.log('draw round 1');
     newGame.drawCards();
     newGame.save();
-    console.log(newGame.deck);
+    // console.log(newGame.deck);
     const responseContent = newGame.toJSON();
     return await responseHandler(res, responseContent, request.headers['content-type']);
   } catch (error) {
@@ -113,20 +114,29 @@ export async function getCards(req: Request, res: Response): Promise<Response> {
 }
 
 // TODO: cashout function
-// export async function cashout(req: Request, res: Response): Promise<Response> {
-//   try {
-//     throw functionNotImplementedError;
-//     // TODO: check that game is not game over yet
+export async function cashout(req: Request, res: Response): Promise<Response> {
+  try {
+    // throw functionNotImplementedError;
+    // TODO: check that game is not game over yet
 
-//     // if game is over
-//     // throw gameOverError
+    const request: Request = validateRequest(await requestHandler(req));
+    const { id } = request.params;
+    const game = await gameModel.findById(id);
+    if (!game) {
+      throw gameNotFoundError;
+    }
 
-//     // if game is NOT over
-//     // return the row total
-//     // const request: Request = validateRequest(await requestHandler(req), { bodySchema: newCollectionSchema });
-//     // const responseContent = {};
-//     // return await responseHandler(res, responseContent, request.headers['content-type']);
-//   } catch (error) {
-//     return handleError(error, res, req.headers['content-type']);
-//   }
-// }
+    // if (game.)
+
+    // if game is over
+    // throw gameOverError
+
+    // if game is NOT over
+    // return the row total
+    // const request: Request = validateRequest(await requestHandler(req), { bodySchema: newCollectionSchema });
+    const responseContent = {};
+    return await responseHandler(res, responseContent, request.headers['content-type']);
+  } catch (error) {
+    return handleError(error, res, req.headers['content-type']);
+  }
+}
