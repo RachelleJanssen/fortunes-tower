@@ -1,12 +1,13 @@
 // require models
 import { Request, Response } from 'express';
+import { Error } from 'mongoose';
 
 // require schemas and schema functions
-import { fillDeck, gameModel } from '../../models/game';
+import { fillDeck, gameModel, GameState } from '../../models/game';
 
 // require utilities
 import { shuffle } from '../../utils/array/arrayHelpers';
-import { gameNotFoundError, gameOverError } from '../../utils/error/customErrors';
+import { CustomError, gameNotFoundError, gameOverError } from '../../utils/error/customErrors';
 import { requestHandler, responseHandler } from '../../utils/express/expressHandler';
 import handleError from '../../utils/express/handleError';
 import { guidGenerator } from '../../utils/number/numberHelpers';
@@ -54,20 +55,25 @@ export async function createNewGame(req: Request, res: Response): Promise<Respon
       betMultiplier: request.body.betMultiplier,
       multiplier: [1],
       drawnCards: [[]],
-      deck: shuffle(fillDeck()),
+      deck: shuffle(fillDeck(request.body.deckChoice)),
+      gameState: GameState.PLAYING,
     });
+
     // draw the tower card
-    console.log('draw round 0');
+    // console.log('draw round 0');
     newGame.drawCards();
     // and the first row
-    console.log('draw round 1');
+    // console.log('draw round 1');
     newGame.drawCards();
+    const validateGame = newGame.validateSync();
+    if (validateGame instanceof Error.ValidationError) {
+      throw new CustomError(validateGame.message, validateGame.name, 500);
+    }
     newGame.save();
     // console.log(newGame.deck);
     const responseContent = newGame.toJSON();
     return await responseHandler(res, responseContent, request.headers['content-type']);
   } catch (error) {
-    console.log(error);
     return handleError(error, res, req.headers['content-type']);
   }
 }

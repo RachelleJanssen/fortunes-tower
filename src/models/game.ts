@@ -1,6 +1,7 @@
 import { Document } from 'mongoose';
 import { instanceMethod, prop, Typegoose } from 'typegoose';
 import { shuffle } from '../utils/array/arrayHelpers';
+import { CustomError } from '../utils/error/customErrors';
 import { cardValues } from './card';
 
 interface IRowMessage {
@@ -8,7 +9,13 @@ interface IRowMessage {
   message: string;
 }
 
-type GameState = 'playing' | 'gameOver' | 'cashedOut';
+interface Duplicates { card: number; count: number; }
+
+export enum GameState {
+  PLAYING = 'playing',
+  GAMEOVER = 'gameOver',
+  CHASHEDOUT = 'cashedOut',
+}
 
 class Game extends Typegoose {
 
@@ -21,23 +28,19 @@ class Game extends Typegoose {
   @prop()
   public cashout: number = 0;
   @prop()
-  private tableValue: number[] = [1];
+  private tableValue: number = 1;
   @prop()
   private betMultiplier: number = 1;
   @prop()
   private multiplier: number[] = [1];
-  @prop()
-  private gameState: GameState = 'playing';
+  @prop({ enum: GameState })
+  private gameState: GameState = GameState.PLAYING;
   @prop()
   private round = 1;
   @prop()
   private drawnCards: number[][] = [];
   @prop()
   private deck: number[] = [];
-
-  public getGameState() {
-    return this.gameState;
-  }
 
   @instanceMethod
   public drawCards(): void {
@@ -113,7 +116,7 @@ class Game extends Typegoose {
     // will be false if there is no burn
     // will be true if there was a burn that could not be protected by tower of hero card
     if (burned) {
-      this.changeGameState('gameOver');
+      this.changeGameState(GameState.GAMEOVER);
       return burned;
     }
     return burned;
@@ -127,7 +130,7 @@ class Game extends Typegoose {
   @instanceMethod
   public cashoutGame(): void {
     this.cashout = this.tableValue;
-    this.changeGameState('cashedOut');
+    this.changeGameState(GameState.CHASHEDOUT);
   }
 
   @instanceMethod
@@ -135,12 +138,13 @@ class Game extends Typegoose {
     // TODO: if round === 8 (i.e. final round) and no game over => auto cashout
     // TODO: if there is still a tower card, trigger calculate jackpoy function
     // TODO: check if there are duplicated (like pair of 2s), if there are, then the row totals are * the kind of set
+
     // TODO: refactor this code to a function
-    let count: Array<{ card: number, count: number}> = [];
+    let count: Duplicates[] = [];
     row.forEach((i) => {
       if (i !== 0) { // duplicate hero cards don't count
         if (!count.find(x => x.card === i)) {
-          count.push({ card: i, count: 1});
+          count.push({ card: i, count: 1 });
         } else {
           const index = count.findIndex(x => x.card === i);
           count[index].count += 1;
@@ -148,6 +152,7 @@ class Game extends Typegoose {
       }
     });
     // TODO: sorting isn't 100% correct
+    console.log('counting');
     count = count.sort(x => x.count);
     count.reverse();
     console.log(count);
@@ -157,10 +162,12 @@ class Game extends Typegoose {
       console.log(this.multiplier);
     }
 
-    const rowTotal = row.reduce((total, value) => total + value)
+    const rowTotal = row.reduce((total, value) => total + value);
     this.rowMessages[rowIndex] = { rowTotal, message: '' };
     if (this.gameState !== 'gameOver' && this.gameState === 'playing') {
-      this.tableValue = rowTotal;
+      console.log(`bet multiplier is ${this.betMultiplier}`);
+      console.log(`duplicate multiplier is ${this.multiplier.reduce((total, multiply) => total * multiply, 0)}`);
+      this.tableValue = rowTotal * this.betMultiplier * (this.multiplier.reduce((total, multiply) => total * multiply, 0));
     } else if (this.gameState === 'gameOver') {
       this.tableValue = 0;
     }
@@ -177,13 +184,44 @@ class Game extends Typegoose {
   }
 }
 
-export function fillDeck(): number[] {
+// Emerald deck: contains 4 Hero cards and 70 numbered cards (10 of each number).
+// Ruby deck: contains 4 Hero cards and 63 numbered cards (9 of each number).
+// Diamond deck: contains 4 Hero cards and 56 numbered cards (8 of each number).
+
+export enum DeckType {
+  EMERALD = 'Emerald',
+  RUBY = 'Ruby',
+  DIAMOND = 'Diamond',
+}
+
+export function fillDeck(deckType: DeckType): number[] {
   const deck = [];
   let index = 0;
+  let deckSize: number;
+  let maxNumberCards;
+  const maxHeroCards = 4;
+  switch (deckType) {
+    case DeckType.EMERALD:
+      maxNumberCards = 10;
+      break;
+    case DeckType.RUBY:
+      maxNumberCards = 9;
+      break;
+    case DeckType.DIAMOND:
+      maxNumberCards = 8;
+      break;
 
-  for (let deckIndex = 0; deckIndex < 74; deckIndex += 1) {
+    default:
+      throw new CustomError('Invalid deck choice', 'InvalidDeckError', 400);
+  }
+
+  deckSize = (maxNumberCards * 7) + maxHeroCards;
+
+  console.log('deck size', deckSize);
+
+  for (let deckIndex = 0; deckIndex < deckSize; deckIndex += 1) {
     const cardsPresent = deck.filter(card => card === Object.values(cardValues)[index]).length;
-    const maxCards = index === cardValues.hero ? 4 : 10;
+    const maxCards = index === cardValues.hero ? maxHeroCards : maxNumberCards;
     if (cardsPresent < maxCards) {
       deck[deckIndex] = index;
     } else {
@@ -191,6 +229,7 @@ export function fillDeck(): number[] {
       index += 1;
     }
   }
+  console.log(deck);
   return deck;
 }
 
@@ -203,6 +242,7 @@ export interface IGame extends Document {
   multiplier: number;
   drawnCards: number[][];
   deck: number[];
+  gameState: GameState;
 }
 
-export const gameModel = new Game().getModelForClass(Game);
+export const gameModel = new Game().getModelForClass(Game, { schemaOptions: { validateBeforeSave: true } });
