@@ -3,10 +3,15 @@ import * as joi from 'joi';
 import throwableError from '../express/throwableError';
 import { isEmpty } from '../objects/objecthelpers';
 
+// tslint:disable-next-line:interface-name
+interface ValidRequest<T> extends Request {
+  body: T;
+}
+
 /**
  * Validate an object with a joi schema
  * @param {Object} object The object to test
- * @param {joi.ObjectSchema} schema The joi schema to use
+ * @param {joi.SchemaLike} schema The joi schema to use
  * @param {boolean} requireAllFields Whether or not all fields are required
  */
 const validateObject = <type>(object: object, schema: joi.SchemaLike, requireAllFields: boolean = true): type => {
@@ -22,21 +27,21 @@ const validateObject = <type>(object: object, schema: joi.SchemaLike, requireAll
   return (result.value as unknown) as type;
 };
 
-const validateRequest = (
+const validateRequest = <type>(
   request: Request,
   schemas?: { paramsSchema?: joi.AnySchema; querySchema?: joi.SchemaLike; bodySchema?: joi.AnySchema },
-): Request => {
+): ValidRequest<type> => {
   if (!isEmpty(request.params) && schemas && schemas.paramsSchema) {
-    request.params = validateObject<object>(request.params, schemas.paramsSchema);
+    request.params = validateObject<type>(request.params, schemas.paramsSchema);
   }
   if (!isEmpty(request.query) && schemas && schemas.querySchema) {
-    request.query = validateObject<object>(request.query, schemas.querySchema);
+    request.query = validateObject<type>(request.query, schemas.querySchema);
   }
   // TODO: try to get an optional type annotation in the body
   if (schemas && schemas.bodySchema) {
-    request.body = validateObject<object>(request.body, schemas.bodySchema);
+    request.body = validateObject<type>(request.body, schemas.bodySchema);
   }
-  return request;
+  return request as ValidRequest<type>;
 };
 
 /**

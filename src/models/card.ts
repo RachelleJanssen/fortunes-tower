@@ -9,6 +9,12 @@ enum validValues {
   seven = 7,
 }
 
+export enum DeckType {
+  EMERALD = 'Emerald',
+  RUBY = 'Ruby',
+  DIAMOND = 'Diamond',
+}
+
 export const cardValues = {
   hero: 0,
   one: 1,
