@@ -134,40 +134,45 @@ class Game extends Typegoose {
   }
 
   @instanceMethod
+  private checkDuplicates(row: number[]): void {
+    const duplicates: Duplicates[] = [];
+    row.forEach((card) => {
+      if (card !== cardValues.hero) { // duplicate hero cards don't count
+        if (!duplicates.find(x => x.card === card)) { // if the number hasn't been encountered yet, add it to the count
+          duplicates.push({ card, count: 1 });
+        } else {
+          // find the index and +1 the count
+          const index = duplicates.findIndex(x => x.card === card);
+          duplicates[index].count += 1;
+        }
+      }
+    });
+    duplicates.filter(x => x.count > 1)
+      .forEach((duplicate) => {
+        if (duplicate.count > 1) {
+          this.multiplier.push(duplicate.count);
+        }
+      });
+
+    // duplicates.forEach((duplicate) => {
+    //   if (duplicate.count > 1) {
+    //     this.multiplier.push(duplicate.count);
+    //   }
+    // });
+  }
+
+  @instanceMethod
   private calculateRow(rowIndex: number, row: number[]): void {
     // TODO: if round === 8 (i.e. final round) and no game over => auto cashout
     // TODO: if there is still a tower card, trigger calculate jackpoy function
     // TODO: check if there are duplicated (like pair of 2s), if there are, then the row totals are * the kind of set
 
-    // TODO: refactor this code to a function
-    let count: Duplicates[] = [];
-    row.forEach((i) => {
-      if (i !== 0) { // duplicate hero cards don't count
-        if (!count.find(x => x.card === i)) {
-          count.push({ card: i, count: 1 });
-        } else {
-          const index = count.findIndex(x => x.card === i);
-          count[index].count += 1;
-        }
-      }
-    });
-    // TODO: sorting isn't 100% correct
-    console.log('counting');
-    count = count.sort(x => x.count);
-    count.reverse();
-    console.log(count);
-    if (count[0].count > 1) {
-      console.log(`${count[0].count}x multiplier!`);
-      this.multiplier.push(count[0].count);
-      console.log(this.multiplier);
-    }
+    this.checkDuplicates(row);
 
     const rowTotal = row.reduce((total, value) => total + value);
     this.rowMessages[rowIndex] = { rowTotal, message: '' };
     if (this.gameState !== 'gameOver' && this.gameState === 'playing') {
-      console.log(`bet multiplier is ${this.betMultiplier}`);
-      console.log(`duplicate multiplier is ${this.multiplier.reduce((total, multiply) => total * multiply, 0)}`);
-      this.tableValue = rowTotal * this.betMultiplier * (this.multiplier.reduce((total, multiply) => total * multiply, 0));
+      this.tableValue = rowTotal * this.betMultiplier * (this.multiplier.reduce((total, multiply) => total * multiply));
     } else if (this.gameState === 'gameOver') {
       this.tableValue = 0;
     }
