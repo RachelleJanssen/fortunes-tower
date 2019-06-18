@@ -10,7 +10,7 @@ import { shuffle } from '../../utils/array/arrayHelpers';
 import { CustomError, gameNotFoundError, gameOverError } from '../../utils/error/customErrors';
 import { requestHandler, responseHandler } from '../../utils/express/expressHandler';
 import handleError from '../../utils/express/handleError';
-import { INewGameBody, newGameBodySchema } from '../../utils/validation/requestSchemas';
+import { gameIdQuerySchema, INewGameBody, newGameBodySchema } from '../../utils/validation/requestSchemas';
 import { validateRequest } from '../../utils/validation/validateBySchema';
 
 /**
@@ -83,7 +83,7 @@ export async function createNewGame(req: Request, res: Response): Promise<Respon
 
 export async function getGameDetails(req: Request, res: Response): Promise<Response> {
   try {
-    const request: Request = validateRequest(await requestHandler(req));
+    const request = validateRequest(await requestHandler(req), { querySchema: gameIdQuerySchema });
     const { id } = request.params;
     const game = await gameModel.findById(id);
     if (!game) {
@@ -98,7 +98,7 @@ export async function getGameDetails(req: Request, res: Response): Promise<Respo
 
 export async function getCards(req: Request, res: Response): Promise<Response> {
   try {
-    const request: Request = validateRequest(await requestHandler(req));
+    const request: Request = validateRequest(await requestHandler(req), { querySchema: gameIdQuerySchema });
     const { id } = request.params;
 
     const game = await gameModel.findById(id);
@@ -111,7 +111,7 @@ export async function getCards(req: Request, res: Response): Promise<Response> {
     }
 
     game.drawCards();
-    await gameModel.update({ _id: id }, game);
+    await gameModel.updateOne({ _id: id }, game);
     const responseContent = {
       game,
       message: 'cards drawn',
@@ -124,7 +124,7 @@ export async function getCards(req: Request, res: Response): Promise<Response> {
 
 export async function cashout(req: Request, res: Response): Promise<Response> {
   try {
-    const request: Request = validateRequest(await requestHandler(req));
+    const request: Request = validateRequest(await requestHandler(req), { querySchema: gameIdQuerySchema });
     const { id } = request.params;
     const game = await gameModel.findById(id);
     if (!game) {
@@ -135,7 +135,7 @@ export async function cashout(req: Request, res: Response): Promise<Response> {
     }
 
     game.cashoutGame();
-    await gameModel.update({ _id: id }, game);
+    await gameModel.updateOne({ _id: id }, game);
 
     const responseContent = {
       game,

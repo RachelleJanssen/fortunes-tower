@@ -1,7 +1,7 @@
 import * as joi from'joi';
 import { DeckType } from '../../models/card';
 
-export const gameIdParameter = joi.string().max(24);
+export const gameIdQuerySchema = joi.string().max(24);
 
 export interface INewGameBody {
   bet: number;
