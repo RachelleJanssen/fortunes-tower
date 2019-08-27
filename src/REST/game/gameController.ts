@@ -3,14 +3,14 @@ import { Request, Response } from 'express';
 import { Error } from 'mongoose';
 
 // require schemas and schema functions
-import { fillDeck, gameModel, GameState } from '../../models/game';
+import { fillDeck, gameModel, GameState, IGame } from '../../models/game';
 
 // require utilities
 import { shuffle } from '../../utils/array/arrayHelpers';
 import { CustomError, gameNotFoundError, gameOverError } from '../../utils/error/customErrors';
 import { requestHandler, responseHandler } from '../../utils/express/expressHandler';
 import handleError from '../../utils/express/handleError';
-import { guidGenerator } from '../../utils/number/numberHelpers';
+import { gameIdQuerySchema, INewGameBody, newGameBodySchema } from '../../utils/validation/requestSchemas';
 import { validateRequest } from '../../utils/validation/validateBySchema';
 
 /**
@@ -43,21 +43,24 @@ export async function createNewGame(req: Request, res: Response): Promise<Respon
         Ruby deck: contains 4 Hero cards and 63 numbered cards (9 of each number).
         Diamond deck: contains 4 Hero cards and 56 numbered cards (8 of each number).
     */
-    const request: Request = validateRequest(await requestHandler(req));
+    const request = validateRequest<INewGameBody>(await requestHandler(req), { bodySchema: newGameBodySchema });
+
+    const betMultiplier = request.body.bet / 15;
 
     // INewGame
-    const newGame = new gameModel({
-      id: guidGenerator(),
+    const newGameObject: IGame = {
+      betMultiplier,
       round: 0,
       rowStatus: [],
       rowMessages: [],
       tableValue: 0,
-      betMultiplier: request.body.betMultiplier,
-      multiplier: [1],
+      multiplier: [1], // multiplier is reserved for duplicated
       drawnCards: [[]],
-      deck: shuffle(fillDeck(request.body.deckChoice)),
-      gameState: GameState.PLAYING,
-    });
+      deck: shuffle(fillDeck(request.body.deck)),
+      _gameState: GameState.PLAYING,
+    };
+
+    const newGame = new gameModel(newGameObject);
 
     // draw the tower card
     // console.log('draw round 0');
@@ -80,7 +83,7 @@ export async function createNewGame(req: Request, res: Response): Promise<Respon
 
 export async function getGameDetails(req: Request, res: Response): Promise<Response> {
   try {
-    const request: Request = validateRequest(await requestHandler(req));
+    const request = validateRequest(await requestHandler(req), { querySchema: gameIdQuerySchema });
     const { id } = request.params;
     const game = await gameModel.findById(id);
     if (!game) {
@@ -95,7 +98,7 @@ export async function getGameDetails(req: Request, res: Response): Promise<Respo
 
 export async function getCards(req: Request, res: Response): Promise<Response> {
   try {
-    const request: Request = validateRequest(await requestHandler(req));
+    const request: Request = validateRequest(await requestHandler(req), { querySchema: gameIdQuerySchema });
     const { id } = request.params;
 
     const game = await gameModel.findById(id);
@@ -103,12 +106,12 @@ export async function getCards(req: Request, res: Response): Promise<Response> {
     if (!game) {
       throw gameNotFoundError;
     }
-    if (game.rowStatus.includes(true)) {
+    if (game.gameState === GameState.GAMEOVER || game.gameState === GameState.CHASHEDOUT) {
       throw gameOverError;
     }
 
     game.drawCards();
-    await gameModel.update({ _id: id }, game);
+    await gameModel.updateOne({ _id: id }, game);
     const responseContent = {
       game,
       message: 'cards drawn',
@@ -119,28 +122,25 @@ export async function getCards(req: Request, res: Response): Promise<Response> {
   }
 }
 
-// TODO: cashout function
 export async function cashout(req: Request, res: Response): Promise<Response> {
   try {
-    // throw functionNotImplementedError;
-    // TODO: check that game is not game over yet
-
-    const request: Request = validateRequest(await requestHandler(req));
+    const request: Request = validateRequest(await requestHandler(req), { querySchema: gameIdQuerySchema });
     const { id } = request.params;
     const game = await gameModel.findById(id);
     if (!game) {
       throw gameNotFoundError;
     }
+    if (game.gameState === GameState.GAMEOVER || game.gameState === GameState.CHASHEDOUT) {
+      throw gameOverError;
+    }
 
-    // if (game.)
+    game.cashoutGame();
+    await gameModel.updateOne({ _id: id }, game);
 
-    // if game is over
-    // throw gameOverError
-
-    // if game is NOT over
-    // return the row total
-    // const request: Request = validateRequest(await requestHandler(req), { bodySchema: newCollectionSchema });
-    const responseContent = {};
+    const responseContent = {
+      game,
+      message: 'player cashed out, thanks for playing',
+    };
     return await responseHandler(res, responseContent, request.headers['content-type']);
   } catch (error) {
     return handleError(error, res, req.headers['content-type']);

@@ -1,15 +1,14 @@
-import { Document } from 'mongoose';
 import { instanceMethod, prop, Typegoose } from 'typegoose';
 import { shuffle } from '../utils/array/arrayHelpers';
 import { CustomError } from '../utils/error/customErrors';
-import { cardValues } from './card';
+import { cardValues, DeckType } from './card';
 
 interface IRowMessage {
   rowTotal: number;
   message: string;
 }
 
-interface Duplicates { card: number; count: number; }
+interface IDuplicates { card: number; count: number; }
 
 export enum GameState {
   PLAYING = 'playing',
@@ -34,7 +33,7 @@ class Game extends Typegoose {
   @prop()
   private multiplier: number[] = [1];
   @prop({ enum: GameState })
-  private gameState: GameState = GameState.PLAYING;
+  private _gameState: GameState = GameState.PLAYING;
   @prop()
   private round = 1;
   @prop()
@@ -42,9 +41,21 @@ class Game extends Typegoose {
   @prop()
   private deck: number[] = [];
 
+  public get gameState(): GameState {
+    return this._gameState;
+  }
+  public set gameState(value: GameState) {
+    this._gameState = value;
+  }
+
+  // public changeGameState(newState: GameState): void {
+  //   this._gameState = newState;
+  // }
+
   @instanceMethod
   public drawCards(): void {
-    if (this.rowStatus[this.round - 1]) { // checking for burn status of previous row
+    // checking for burn status of previous row
+    if (this.rowStatus[this.round - 1]) {
       // game is over, no more card draws allowed
       console.log('game is over, no more card draws allowed');
     }
@@ -57,12 +68,11 @@ class Game extends Typegoose {
       const newCardDrawn: number = shuffle(this.deck)[randomCardIndex];
       this.deck.splice(randomCardIndex, 1);
       if (this.round === 0) {
+        // TODO: remove the minus, this is purely to easily track where the tower card went
         this.drawnCards[0] = [-newCardDrawn];
       } else {
         this.drawnCards[this.round].push(newCardDrawn);
       }
-      // TODO: check each card if it overlapse with the previous row, except row 0 (since it's the tower card)
-      // checkBurn(); // TODO: if burn, replace with tower card (if it's available that is) and check again. else change row status to false (meaning this row is not valid -> game over)
     }
     // TODO: after getting all cards and rowstatus === false, check if the row contains a hero. If it does then the row is saved and the game is not over yet!
     if (!this.checkHasHeroes(this.drawnCards[this.round]) && this.round !== 0) {
@@ -77,8 +87,13 @@ class Game extends Typegoose {
     // increment round
     this.round += 1;
     // if we reached the last round and we still have the tower card we have a jackpot
-    if (this.round === 8 && this.drawnCards[0][0] !== null) {
-      this.calculateJackpot();
+    if (this.round === 8) {
+      if (this.drawnCards[0][0] !== null) {
+        this.calculateJackpot();
+      } else {
+        // round 8 is an auto cashout
+        this._gameState = GameState.CHASHEDOUT;
+      }
     }
   }
 
@@ -116,7 +131,7 @@ class Game extends Typegoose {
     // will be false if there is no burn
     // will be true if there was a burn that could not be protected by tower of hero card
     if (burned) {
-      this.changeGameState(GameState.GAMEOVER);
+      this._gameState = GameState.GAMEOVER;
       return burned;
     }
     return burned;
@@ -130,45 +145,39 @@ class Game extends Typegoose {
   @instanceMethod
   public cashoutGame(): void {
     this.cashout = this.tableValue;
-    this.changeGameState(GameState.CHASHEDOUT);
+    this._gameState = GameState.CHASHEDOUT;
+  }
+
+  @instanceMethod
+  private checkDuplicates(row: number[]): void {
+    const duplicates: IDuplicates[] = [];
+    row.forEach((card) => {
+      // duplicate hero cards don't count
+      if (card !== cardValues.hero) {
+        // if the number hasn't been encountered yet, add it to the count
+        if (!duplicates.find(x => x.card === card)) {
+          duplicates.push({ card, count: 1 });
+        } else {
+          // find the index and +1 the count
+          const index = duplicates.findIndex(x => x.card === card);
+          duplicates[index].count += 1;
+        }
+      }
+    });
+    // for each card, that has a duplicate, add it to the multiplier array
+    duplicates.filter(x => x.count > 1).forEach(duplicate => this.multiplier.push(duplicate.count));
   }
 
   @instanceMethod
   private calculateRow(rowIndex: number, row: number[]): void {
-    // TODO: if round === 8 (i.e. final round) and no game over => auto cashout
-    // TODO: if there is still a tower card, trigger calculate jackpoy function
-    // TODO: check if there are duplicated (like pair of 2s), if there are, then the row totals are * the kind of set
 
-    // TODO: refactor this code to a function
-    let count: Duplicates[] = [];
-    row.forEach((i) => {
-      if (i !== 0) { // duplicate hero cards don't count
-        if (!count.find(x => x.card === i)) {
-          count.push({ card: i, count: 1 });
-        } else {
-          const index = count.findIndex(x => x.card === i);
-          count[index].count += 1;
-        }
-      }
-    });
-    // TODO: sorting isn't 100% correct
-    console.log('counting');
-    count = count.sort(x => x.count);
-    count.reverse();
-    console.log(count);
-    if (count[0].count > 1) {
-      console.log(`${count[0].count}x multiplier!`);
-      this.multiplier.push(count[0].count);
-      console.log(this.multiplier);
-    }
+    this.checkDuplicates(row);
 
     const rowTotal = row.reduce((total, value) => total + value);
     this.rowMessages[rowIndex] = { rowTotal, message: '' };
-    if (this.gameState !== 'gameOver' && this.gameState === 'playing') {
-      console.log(`bet multiplier is ${this.betMultiplier}`);
-      console.log(`duplicate multiplier is ${this.multiplier.reduce((total, multiply) => total * multiply, 0)}`);
-      this.tableValue = rowTotal * this.betMultiplier * (this.multiplier.reduce((total, multiply) => total * multiply, 0));
-    } else if (this.gameState === 'gameOver') {
+    if (this._gameState !== 'gameOver' && this._gameState === 'playing') {
+      this.tableValue = rowTotal * this.betMultiplier * (this.multiplier.reduce((total, multiply) => total * multiply));
+    } else if (this._gameState === 'gameOver') {
       this.tableValue = 0;
     }
   }
@@ -178,21 +187,11 @@ class Game extends Typegoose {
     this.tableValue = this.rowMessages.reduce((total, row) => total + row.rowTotal, 0);
     this.cashout = this.tableValue;
   }
-
-  private changeGameState(newState: GameState): void {
-    this.gameState = newState;
-  }
 }
 
 // Emerald deck: contains 4 Hero cards and 70 numbered cards (10 of each number).
 // Ruby deck: contains 4 Hero cards and 63 numbered cards (9 of each number).
 // Diamond deck: contains 4 Hero cards and 56 numbered cards (8 of each number).
-
-export enum DeckType {
-  EMERALD = 'Emerald',
-  RUBY = 'Ruby',
-  DIAMOND = 'Diamond',
-}
 
 export function fillDeck(deckType: DeckType): number[] {
   const deck = [];
@@ -233,16 +232,16 @@ export function fillDeck(deckType: DeckType): number[] {
   return deck;
 }
 
-export interface IGame extends Document {
-  id: string;
+export interface IGame {
   round: number;
   rowStatus: boolean[];
   rowMessages: string[];
   tableValue: number;
-  multiplier: number;
+  multiplier: number[];
+  betMultiplier: number;
   drawnCards: number[][];
   deck: number[];
-  gameState: GameState;
+  _gameState: GameState;
 }
 
 export const gameModel = new Game().getModelForClass(Game, { schemaOptions: { validateBeforeSave: true } });
