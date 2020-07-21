@@ -68,7 +68,7 @@
     "@types/winston": "^2.4.4",
     "@types/xml2js": "^0.4.4",
     "ava": "^2.0.0",
-    "codecov": "^3.5.0",
+    "codecov": "^3.7.1",
     "eslint": "^5.16.0",
     "eslint-config-airbnb-base": "^13.1.0",
     "eslint-plugin-import": "^2.17.3",
