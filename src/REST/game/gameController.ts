@@ -3,14 +3,16 @@ import { Request, Response } from 'express';
 import { Error } from 'mongoose';
 
 // require schemas and schema functions
-import { fillDeck, gameModel, GameState, IGame } from '../../models/game';
+import {
+  fillDeck, GameModel, GameState, IGame, INewGameBody,
+} from '../../models/game';
 
 // require utilities
 import { shuffle } from '../../utils/array/arrayHelpers';
 import { CustomError, gameNotFoundError, gameOverError } from '../../utils/error/customErrors';
 import { requestHandler, responseHandler } from '../../utils/express/expressHandler';
 import handleError from '../../utils/express/handleError';
-import { gameIdQuerySchema, INewGameBody, newGameBodySchema } from '../../utils/validation/requestSchemas';
+import { gameIdQuerySchema, newGameBodySchema } from '../../utils/validation/requestSchemas';
 import { validateRequest } from '../../utils/validation/validateBySchema';
 
 /**
@@ -20,9 +22,8 @@ import { validateRequest } from '../../utils/validation/validateBySchema';
  */
 export async function listGames(req: Request, res: Response): Promise<Response> {
   try {
-    // throw functionNotImplementedError;
     const request: Request = validateRequest(await requestHandler(req));
-    const games = await gameModel.find({});
+    const games = await GameModel.find({});
     const responseContent = {
       games,
     };
@@ -60,7 +61,7 @@ export async function createNewGame(req: Request, res: Response): Promise<Respon
       _gameState: GameState.PLAYING,
     };
 
-    const newGame = new gameModel(newGameObject);
+    const newGame = new GameModel(newGameObject);
 
     // draw the tower card
     // console.log('draw round 0');
@@ -85,7 +86,7 @@ export async function getGameDetails(req: Request, res: Response): Promise<Respo
   try {
     const request = validateRequest(await requestHandler(req), { querySchema: gameIdQuerySchema });
     const { id } = request.params;
-    const game = await gameModel.findById(id);
+    const game = await GameModel.findById(id);
     if (!game) {
       throw gameNotFoundError;
     }
@@ -101,7 +102,7 @@ export async function getCards(req: Request, res: Response): Promise<Response> {
     const request: Request = validateRequest(await requestHandler(req), { querySchema: gameIdQuerySchema });
     const { id } = request.params;
 
-    const game = await gameModel.findById(id);
+    const game = await GameModel.findById(id);
 
     if (!game) {
       throw gameNotFoundError;
@@ -111,7 +112,7 @@ export async function getCards(req: Request, res: Response): Promise<Response> {
     }
 
     game.drawCards();
-    await gameModel.updateOne({ _id: id }, game);
+    await GameModel.updateOne({ _id: id }, game);
     const responseContent = {
       game,
       message: 'cards drawn',
@@ -126,7 +127,7 @@ export async function cashout(req: Request, res: Response): Promise<Response> {
   try {
     const request: Request = validateRequest(await requestHandler(req), { querySchema: gameIdQuerySchema });
     const { id } = request.params;
-    const game = await gameModel.findById(id);
+    const game = await GameModel.findById(id);
     if (!game) {
       throw gameNotFoundError;
     }
@@ -135,7 +136,7 @@ export async function cashout(req: Request, res: Response): Promise<Response> {
     }
 
     game.cashoutGame();
-    await gameModel.updateOne({ _id: id }, game);
+    await GameModel.updateOne({ _id: id }, game);
 
     const responseContent = {
       game,

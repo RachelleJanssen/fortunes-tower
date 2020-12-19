@@ -2,8 +2,9 @@ import { Request, Response } from 'express';
 
 import { CONTENTTYPES } from '../constants';
 import { IBaseXMLRequest } from '../models/baseModels';
-import { baseXMLRequest } from '../validation/sharedSchemas';
-import { validateObject } from '../validation/validateBySchema';
+import baseXMLRequest from '../validation/sharedSchemas';
+// import { baseXMLRequest } from '../validation/sharedSchemas';
+// import { validateObject } from '../validation/validateBySchema';
 import { toXml } from '../XML/XMLParser';
 
 /**
@@ -21,7 +22,7 @@ export async function requestHandler(request: Request): Promise<Request> {
         if (!jsonBody) {
           jsonBody = { request: {} };
         }
-        request.body = await validateObject<IBaseXMLRequest>(jsonBody, baseXMLRequest).request;
+        request.body = await baseXMLRequest.validate(jsonBody).value;
       }
       break;
     default:

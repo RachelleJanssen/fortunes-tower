@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "target": "es2017",
+    "target": "ES2020",
     "outDir": "build/main",
     "rootDir": ".",
     "moduleResolution":"node",
@@ -8,7 +8,7 @@
     "declaration": true,
     "inlineSourceMap": true,
     "esModuleInterop": true /* Enables emit interoperability between CommonJS and ES Modules via creation of namespace objects for all imports. Implies 'allowSyntheticDefaultImports'. */,
-
+    "baseUrl": "./",
     "strict": true /* Enable all strict type-checking options. */,
 
     /* Strict Type-Checking Options */
@@ -36,11 +36,16 @@
     "experimentalDecorators": true /* Enables experimental support for ES7 decorators. */,
     "emitDecoratorMetadata": true /* Enables experimental support for emitting type metadata for decorators. */,
 
-    "lib": ["es2017"],
+    "lib": ["ES2020"],
     "types": ["node", "express"],
     "typeRoots": ["node_modules/@types", "src/types", "./"],
   },
   "include": ["src/**/*.ts", "./src/types/*"],
-  "exclude": ["node_modules/**", "build/**"],
+  "exclude": [
+    "node_modules",
+    "./node_modules",
+    "./node_modules/*",
+    "build/**"
+  ],
   "compileOnSave": false
 }

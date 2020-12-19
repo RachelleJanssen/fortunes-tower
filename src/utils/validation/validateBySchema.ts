@@ -1,9 +1,8 @@
 import { Request } from 'express';
-import * as joi from 'joi';
+import joi from 'joi';
 import throwableError from '../express/throwableError';
 import { isEmpty } from '../objects/objecthelpers';
 
-// tslint:disable-next-line:interface-name
 interface ValidRequest<T> extends Request {
   body: T;
 }
@@ -14,10 +13,10 @@ interface ValidRequest<T> extends Request {
  * @param {joi.SchemaLike} schema The joi schema to use
  * @param {boolean} requireAllFields Whether or not all fields are required
  */
-const validateObject = <type>(object: object, schema: joi.SchemaLike, requireAllFields: boolean = true): type => {
+const validateObject = <type>(object: object, schema: joi.Schema, requireAllFields: boolean = true): type => {
   const objectToValidate = object;
 
-  const result = joi.validate(objectToValidate, schema, {
+  const result = schema.validate(objectToValidate, {
     abortEarly: false,
     presence: requireAllFields ? 'optional' : 'required',
   });
@@ -29,13 +28,13 @@ const validateObject = <type>(object: object, schema: joi.SchemaLike, requireAll
 
 const validateRequest = <type>(
   request: Request,
-  schemas?: { paramsSchema?: joi.AnySchema; querySchema?: joi.SchemaLike; bodySchema?: joi.AnySchema },
+  schemas?: { paramsSchema?: joi.AnySchema; querySchema?: joi.Schema; bodySchema?: joi.AnySchema },
 ): ValidRequest<type> => {
   if (!isEmpty(request.params) && schemas && schemas.paramsSchema) {
-    request.params = validateObject<type>(request.params, schemas.paramsSchema);
+    request.params = validateObject(request.params, schemas.paramsSchema);
   }
   if (!isEmpty(request.query) && schemas && schemas.querySchema) {
-    request.query = validateObject<type>(request.query, schemas.querySchema);
+    request.query = validateObject(request.query, schemas.querySchema);
   }
   // TODO: try to get an optional type annotation in the body
   if (schemas && schemas.bodySchema) {
@@ -51,7 +50,6 @@ const validateRequest = <type>(
  * @param {*} requireAllFields Whether or not all fields are required
  */
 // TODO: test if this wrapper function still works in typescript
-const validateArray = <type>(arrayOfObjects: object[], schema: joi.ObjectSchema, requireAllFields: boolean = true): type[] =>
-  arrayOfObjects.map(item => validateObject<type>(item, schema, requireAllFields));
+const validateArray = <type>(arrayOfObjects: object[], schema: joi.ObjectSchema, requireAllFields: boolean = true): type[] => arrayOfObjects.map((item) => validateObject<type>(item, schema, requireAllFields));
 
 export { validateObject, validateArray, validateRequest };

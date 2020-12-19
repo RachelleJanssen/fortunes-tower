@@ -1,4 +1,4 @@
-import { instanceMethod, prop, Typegoose } from 'typegoose';
+import { prop, getModelForClass } from '@typegoose/typegoose';
 import { shuffle } from '../utils/array/arrayHelpers';
 import { CustomError } from '../utils/error/customErrors';
 import { cardValues, DeckType } from './card';
@@ -8,42 +8,61 @@ interface IRowMessage {
   message: string;
 }
 
+export interface INewGameBody {
+  bet: number;
+  deck: DeckType;
+}
+
 interface IDuplicates { card: number; count: number; }
 
+// eslint-disable-next-line no-shadow
 export enum GameState {
+  // eslint-disable-next-line no-unused-vars
   PLAYING = 'playing',
+  // eslint-disable-next-line no-unused-vars
   GAMEOVER = 'gameOver',
+  // eslint-disable-next-line no-unused-vars
   CHASHEDOUT = 'cashedOut',
 }
 
-class Game extends Typegoose {
-
+class Game {
   @prop()
   public readonly rowStatus: boolean[] = [];
+
   @prop()
   public readonly rowMessages: IRowMessage[] = [];
+
   @prop()
   public readonly timestamp: Date = new Date();
+
   @prop()
   public cashout: number = 0;
+
   @prop()
   private tableValue: number = 1;
+
   @prop()
   private betMultiplier: number = 1;
+
   @prop()
   private multiplier: number[] = [1];
+
   @prop({ enum: GameState })
   private _gameState: GameState = GameState.PLAYING;
+
   @prop()
   private round = 1;
+
   @prop()
   private drawnCards: number[][] = [];
+
   @prop()
   private deck: number[] = [];
 
   public get gameState(): GameState {
     return this._gameState;
   }
+
   public set gameState(value: GameState) {
     this._gameState = value;
   }
@@ -52,7 +71,6 @@ class Game extends Typegoose {
   //   this._gameState = newState;
   // }
 
-  @instanceMethod
   public drawCards(): void {
     // checking for burn status of previous row
     if (this.rowStatus[this.round - 1]) {
@@ -69,8 +87,9 @@ class Game extends Typegoose {
       this.deck.splice(randomCardIndex, 1);
       if (this.round === 0) {
         // TODO: remove the minus, this is purely to easily track where the tower card went
-        this.drawnCards[0] = [-newCardDrawn];
+        this.drawnCards[0] = [newCardDrawn];
       } else {
+        // console.log(newCardDrawn);
         this.drawnCards[this.round].push(newCardDrawn);
       }
     }
@@ -97,7 +116,6 @@ class Game extends Typegoose {
     }
   }
 
-  @instanceMethod
   public checkStatus(prevRow: number[] = this.drawnCards[this.round - 1], index = 0, burned = false, towerCard = this.drawnCards[0][0]): boolean {
     // loop over the cards of the previous row as long as we don't have a burn
     while (index < prevRow.length && !burned) {
@@ -137,40 +155,37 @@ class Game extends Typegoose {
     return burned;
   }
 
-  @instanceMethod
+  // TODO fix this eslint error
+  // eslint-disable-next-line class-methods-use-this
   public checkHasHeroes(row: number[]): boolean {
     return row.includes(cardValues.hero);
   }
 
-  @instanceMethod
   public cashoutGame(): void {
     this.cashout = this.tableValue;
     this._gameState = GameState.CHASHEDOUT;
   }
 
-  @instanceMethod
   private checkDuplicates(row: number[]): void {
     const duplicates: IDuplicates[] = [];
     row.forEach((card) => {
       // duplicate hero cards don't count
       if (card !== cardValues.hero) {
         // if the number hasn't been encountered yet, add it to the count
-        if (!duplicates.find(x => x.card === card)) {
+        if (!duplicates.find((x) => x.card === card)) {
           duplicates.push({ card, count: 1 });
         } else {
           // find the index and +1 the count
-          const index = duplicates.findIndex(x => x.card === card);
+          const index = duplicates.findIndex((x) => x.card === card);
           duplicates[index].count += 1;
         }
       }
     });
     // for each card, that has a duplicate, add it to the multiplier array
-    duplicates.filter(x => x.count > 1).forEach(duplicate => this.multiplier.push(duplicate.count));
+    duplicates.filter((x) => x.count > 1).forEach((duplicate) => this.multiplier.push(duplicate.count));
   }
 
-  @instanceMethod
   private calculateRow(rowIndex: number, row: number[]): void {
-
     this.checkDuplicates(row);
 
     const rowTotal = row.reduce((total, value) => total + value);
@@ -182,7 +197,6 @@ class Game extends Typegoose {
     }
   }
 
-  @instanceMethod
   private calculateJackpot(): void {
     this.tableValue = this.rowMessages.reduce((total, row) => total + row.rowTotal, 0);
     this.cashout = this.tableValue;
@@ -202,24 +216,26 @@ export function fillDeck(deckType: DeckType): number[] {
   switch (deckType) {
     case DeckType.EMERALD:
       maxNumberCards = 10;
+      deckSize = (maxNumberCards * 7) + maxHeroCards;
       break;
     case DeckType.RUBY:
       maxNumberCards = 9;
+      deckSize = (maxNumberCards * 7) + maxHeroCards;
       break;
     case DeckType.DIAMOND:
       maxNumberCards = 8;
+      deckSize = (maxNumberCards * 7) + maxHeroCards;
       break;
 
     default:
       throw new CustomError('Invalid deck choice', 'InvalidDeckError', 400);
   }
 
-  deckSize = (maxNumberCards * 7) + maxHeroCards;
-
   console.log('deck size', deckSize);
 
   for (let deckIndex = 0; deckIndex < deckSize; deckIndex += 1) {
-    const cardsPresent = deck.filter(card => card === Object.values(cardValues)[index]).length;
+    // eslint-disable-next-line no-loop-func
+    const cardsPresent = deck.filter((card) => card === Object.values(cardValues)[index]).length;
     const maxCards = index === cardValues.hero ? maxHeroCards : maxNumberCards;
     if (cardsPresent < maxCards) {
       deck[deckIndex] = index;
@@ -244,4 +260,4 @@ export interface IGame {
   _gameState: GameState;
 }
 
-export const gameModel = new Game().getModelForClass(Game, { schemaOptions: { validateBeforeSave: true } });
+export const GameModel = getModelForClass(Game, { schemaOptions: { validateBeforeSave: true } });
