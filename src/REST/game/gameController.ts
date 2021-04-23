@@ -1,6 +1,7 @@
 // require models
 import { Request, Response } from 'express';
 import { Error } from 'mongoose';
+import { PlayerModel } from '../../models/player';
 
 // require schemas and schema functions
 import {
@@ -46,6 +47,12 @@ export async function createNewGame(req: Request, res: Response): Promise<Respon
     */
     const request = validateRequest<INewGameBody>(await requestHandler(req), { bodySchema: newGameBodySchema });
 
+    const player = await PlayerModel.findById(request.body.player)
+
+    if (!player) {
+      throw new Error('Player not found')
+    }
+
     const betMultiplier = request.body.bet / 15;
 
     // INewGame
@@ -58,6 +65,7 @@ export async function createNewGame(req: Request, res: Response): Promise<Respon
       multiplier: [1], // multiplier is reserved for duplicated
       drawnCards: [[]],
       deck: shuffle(fillDeck(request.body.deck)),
+      player: request.body.player,
       _gameState: GameState.PLAYING,
     };
 
@@ -74,6 +82,8 @@ export async function createNewGame(req: Request, res: Response): Promise<Respon
       throw new CustomError(validateGame.message, validateGame.name, 500);
     }
     newGame.save();
+    player.games.push(newGame)
+    player.save();
     // console.log(newGame.deck);
     const responseContent = newGame.toJSON();
     return await responseHandler(res, responseContent, request.headers['content-type']);

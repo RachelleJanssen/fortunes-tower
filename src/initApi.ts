@@ -5,6 +5,7 @@ import adminRouter from './REST/admin/adminRouter';
 import gameRouter from './REST/game/gameRouter';
 // import itemRouter from './REST/items/itemRouter';
 import throwableError from './utils/express/throwableError';
+import playerRoutes from './REST/player/playerRouter';
 
 function logAPIRequest(req: Request, _res: Response, next: NextFunction): void {
   log().info(
@@ -32,6 +33,7 @@ export default function initApi(app: Express, apiBasePath = '/api'): void {
   app.use(`${apiBasePath}/game`, gameRouter());
   // app.use(`${apiBasePath}/collections`, collectionRouter());
   app.use(`${apiBasePath}/admin`, adminRouter());
+  app.use(`${apiBasePath}/players`, playerRoutes());
 
   app.use((error: Error, _req: Request, _res: Response, _next: NextFunction) => {
     // This is needed so we also pass the error key and data so the frontend can localize the error

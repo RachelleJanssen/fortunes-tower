@@ -1,7 +1,9 @@
-import { prop, getModelForClass } from '@typegoose/typegoose';
+import { prop, getModelForClass, Ref } from '@typegoose/typegoose';
 import { shuffle } from '../utils/array/arrayHelpers';
 import { CustomError } from '../utils/error/customErrors';
 import { cardValues, DeckType } from './card';
+import { Player } from './player';
+import { Types } from 'mongoose'
 
 interface IRowMessage {
   rowTotal: number;
@@ -11,6 +13,7 @@ interface IRowMessage {
 export interface INewGameBody {
   bet: number;
   deck: DeckType;
+  player: string;
 }
 
 interface IDuplicates { card: number; count: number; }
@@ -25,7 +28,7 @@ export enum GameState {
   CHASHEDOUT = 'cashedOut',
 }
 
-class Game {
+export class Game {
   @prop()
   public readonly rowStatus: boolean[] = [];
 
@@ -56,8 +59,19 @@ class Game {
   @prop()
   private drawnCards: number[][] = [];
 
+  @prop({ ref: () => Player })
+  private _player: Ref<Player>;
+
   @prop()
   private deck: number[] = [];
+
+  public get player(): Ref<Player, Types.ObjectId | undefined> {
+    return this._player;
+  }
+
+  public set player(value: Ref<Player, Types.ObjectId | undefined>) {
+    this._player = value;
+  }
 
   public get gameState(): GameState {
     return this._gameState;
@@ -257,6 +271,7 @@ export interface IGame {
   betMultiplier: number;
   drawnCards: number[][];
   deck: number[];
+  player: string;
   _gameState: GameState;
 }
 
