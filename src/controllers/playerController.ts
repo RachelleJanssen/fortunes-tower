@@ -1,10 +1,10 @@
 // require models
 import { Request, Response } from 'express';
-import { IPlayer, PlayerModel } from '../../models/player';
-import { requestHandler, responseHandler } from '../../utils/express/expressHandler';
-import handleError from '../../utils/express/handleError';
-import { newPlayerSchema } from '../../utils/validation/requestSchemas';
-import { validateRequest } from '../../utils/validation/validateBySchema';
+import { IPlayer, PlayerModel } from '../models/player';
+import { requestHandler, responseHandler } from '../utils/express/expressHandler';
+import handleError from '../utils/express/handleError';
+import { newPlayerSchema } from '../utils/validation/requestSchemas';
+import { validateRequest } from '../utils/validation/validateBySchema';
 
 export async function listPlayers(req: Request, res: Response): Promise<Response> {
   try {

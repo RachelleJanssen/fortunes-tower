@@ -1,11 +1,11 @@
 import { Express, NextFunction, Request, Response } from 'express';
 import { log } from './utils/logging/logger';
 
-import adminRouter from './REST/admin/adminRouter';
-import gameRouter from './REST/game/gameRouter';
+import adminRouter from './routers/adminRouter';
+import gameRouter from './routers/gameRouter';
 // import itemRouter from './REST/items/itemRouter';
 import throwableError from './utils/express/throwableError';
-import playerRoutes from './REST/player/playerRouter';
+import playerRoutes from './routers/playerRouter';
 
 function logAPIRequest(req: Request, _res: Response, next: NextFunction): void {
   log().info(

@@ -2,8 +2,8 @@
   "name": "typescript_boilerplate",
   "version": "1.0.0",
   "description": "A template for future typescript projects",
-  "main": "build/main/scs/index.js",
-  "typings": "build/main/src/index.d.ts",
+  "main": "build/scs/index.js",
+  "typings": "build/src/index.d.ts",
   "module": "build/module/scs/index.js",
   "scripts": {
     "build": "run-s clean && run-p build:main",
@@ -19,8 +19,8 @@
     "fix:prettier": "prettier \"src/**/*.ts\" --write",
     "fix:eslint": "eslint --fix --project .",
     "info": "npm-scripts-info",
-    "serve": "node ./build/main/src/index.js",
-    "serve:watch": "nodemon ./build/main/src/index.js",
+    "serve": "node ./build/index.js",
+    "serve:watch": "nodemon ./build/index.js",
     "test": "run-s fix:* build test:*",
     "test:unit": "nyc --silent ava",
     "watch": "run-s clean build:main && run-p \"build:main -- -w\""
@@ -47,8 +47,10 @@
   "dependencies": {
     "@typegoose/typegoose": "^7.4.5",
     "body-parser": "^1.19.0",
+    "chai": "^4.3.4",
     "express": "^4.17.1",
     "express-xml-bodyparser": "^0.3.0",
+    "jest": "^26.6.3",
     "joi": "^17.3.0",
     "lodash": "^4.17.20",
     "mongoose": "^5.10.1",
@@ -92,10 +94,10 @@
   "ava": {
     "failFast": true,
     "files": [
-      "build/main/**/*.spec.js"
+      "build/**/*.spec.js"
     ],
     "sources": [
-      "build/main/**/*.js"
+      "build/**/*.js"
     ]
   },
   "prettier": {

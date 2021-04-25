@@ -1,6 +1,6 @@
-import checkVersion from './checkVersion';
+// import checkVersion from './checkVersion';
 
-checkVersion();
+// checkVersion();
 
 import app from './app';
 /**

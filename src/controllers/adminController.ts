@@ -2,10 +2,10 @@
 
 // require utilities
 import { Request, Response } from 'express';
-import { requestHandler, responseHandler } from '../../utils/express/expressHandler';
-import handleError from '../../utils/express/handleError';
-import { cleanLocalJSONStorage, createLocalJSONStorage } from '../../utils/storage/JSONstorage';
-import { validateRequest } from '../../utils/validation/validateBySchema';
+import { requestHandler, responseHandler } from '../utils/express/expressHandler';
+import handleError from '../utils/express/handleError';
+import { cleanLocalJSONStorage, createLocalJSONStorage } from '../utils/storage/JSONstorage';
+import { validateRequest } from '../utils/validation/validateBySchema';
 
 const emptyStorageObject = {
   games: [],
