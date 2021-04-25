@@ -86,23 +86,9 @@
     "typescript": "^4.2.4",
     "typescript-eslint-parser": "^22.0.0"
   },
-  "ava": {
-    "failFast": true,
-    "files": [
-      "build/main/**/*.spec.js"
-    ],
-    "sources": [
-      "build/main/**/*.js"
-    ]
-  },
   "prettier": {
     "singleQuote": true,
     "trailingComma": "all",
     "printWidth": 140
-  },
-  "nyc": {
-    "exclude": [
-      "**/*.spec.js"
-    ]
   }
 }
