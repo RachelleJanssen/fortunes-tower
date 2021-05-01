@@ -1,13 +1,18 @@
-FROM risingstack/alpine:3.4-v6.9.4-4.2.0
+FROM node:14.4-alpine
 
-ENV PORT 3001
+ENV NODE_ENV=development
 
-EXPOSE 3001
+WORKDIR /usr/src/app
 
-COPY package.json package.json
+COPY ["package.json", "package-lock.json*", "./"]
+
 RUN npm install
 
-COPY . .
-RUN npm run build
+COPY ./ ./
 
-CMD ["node", "dist/"]
+RUN npm run build:main
+
+
+EXPOSE 3000
+
+CMD npm run serve
