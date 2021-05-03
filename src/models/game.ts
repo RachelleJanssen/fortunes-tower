@@ -1,9 +1,9 @@
+import { Types } from 'mongoose';
 import { prop, getModelForClass, Ref } from '@typegoose/typegoose';
 import { shuffle } from '../utils/array/arrayHelpers';
 import { CustomError } from '../utils/error/customErrors';
-import { cardValues, DeckType } from './card';
 import { Player } from './player';
-import { Types } from 'mongoose'
+import { DeckType, CardValues } from '../utils/constants';
 
 interface IRowMessage {
   rowTotal: number;
@@ -103,7 +103,6 @@ export class Game {
         // TODO: remove the minus, this is purely to easily track where the tower card went
         this.drawnCards[0] = [newCardDrawn];
       } else {
-        // console.log(newCardDrawn);
         this.drawnCards[this.round].push(newCardDrawn);
       }
     }
@@ -172,7 +171,7 @@ export class Game {
   // TODO fix this eslint error
   // eslint-disable-next-line class-methods-use-this
   public checkHasHeroes(row: number[]): boolean {
-    return row.includes(cardValues.hero);
+    return row.includes(CardValues.HERO);
   }
 
   public cashoutGame(): void {
@@ -184,7 +183,7 @@ export class Game {
     const duplicates: IDuplicates[] = [];
     row.forEach((card) => {
       // duplicate hero cards don't count
-      if (card !== cardValues.hero) {
+      if (card !== CardValues.HERO) {
         // if the number hasn't been encountered yet, add it to the count
         if (!duplicates.find((x) => x.card === card)) {
           duplicates.push({ card, count: 1 });
@@ -217,48 +216,46 @@ export class Game {
   }
 }
 
-// Emerald deck: contains 4 Hero cards and 70 numbered cards (10 of each number).
-// Ruby deck: contains 4 Hero cards and 63 numbered cards (9 of each number).
-// Diamond deck: contains 4 Hero cards and 56 numbered cards (8 of each number).
-
-export function fillDeck(deckType: DeckType): number[] {
-  const deck = [];
-  let index = 0;
-  let deckSize: number;
-  let maxNumberCards;
+/**
+ * Creates an unshuffled deck of a given deck type. Must be a valid deck type
+ * Emerald deck: contains 4 Hero cards and 70 numbered cards (10 of each number).
+ * Ruby deck: contains 4 Hero cards and 63 numbered cards (9 of each number).
+ * Diamond deck: contains 4 Hero cards and 56 numbered cards (8 of each number).
+ *
+ * @param {DeckType} deckType - The deck type to create a new deck from
+ * @returns {CardValues[]} An unsuffled deck
+ */
+export function fillDeck(deckType: DeckType): CardValues[] {
+  const deck: CardValues[] = [];
+  let maxNumberCards: number;
   const maxHeroCards = 4;
   switch (deckType) {
     case DeckType.EMERALD:
       maxNumberCards = 10;
-      deckSize = (maxNumberCards * 7) + maxHeroCards;
       break;
     case DeckType.RUBY:
       maxNumberCards = 9;
-      deckSize = (maxNumberCards * 7) + maxHeroCards;
       break;
     case DeckType.DIAMOND:
       maxNumberCards = 8;
-      deckSize = (maxNumberCards * 7) + maxHeroCards;
       break;
 
     default:
       throw new CustomError('Invalid deck choice', 'InvalidDeckError', 400);
   }
 
-  console.log('deck size', deckSize);
+  const validCards = Object.values(CardValues).filter((card) => !Number.isNaN(Number(card)));
 
-  for (let deckIndex = 0; deckIndex < deckSize; deckIndex += 1) {
-    // eslint-disable-next-line no-loop-func
-    const cardsPresent = deck.filter((card) => card === Object.values(cardValues)[index]).length;
-    const maxCards = index === cardValues.hero ? maxHeroCards : maxNumberCards;
-    if (cardsPresent < maxCards) {
-      deck[deckIndex] = index;
-    } else {
-      deck[deckIndex] = index + 1;
-      index += 1;
+  validCards.forEach((validCard) => {
+    const cardsPresent = deck.filter((card) => card === validCard).length;
+    const maxCards = validCard === CardValues.HERO ? maxHeroCards : maxNumberCards;
+    for (let index = 0; index < maxCards; index += 1) {
+      if (cardsPresent < maxCards) {
+        deck.push(validCard as CardValues);
+      }
     }
-  }
-  console.log(deck);
+  });
+
   return deck;
 }
 

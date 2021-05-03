@@ -13,7 +13,7 @@ interface ValidRequest<T> extends Request {
  * @param {joi.SchemaLike} schema The joi schema to use
  * @param {boolean} requireAllFields Whether or not all fields are required
  */
-const validateObject = <type>(object: object, schema: joi.Schema, requireAllFields: boolean = true): type => {
+const validateObject = <type>(object: Record<string, unknown>, schema: joi.Schema, requireAllFields: boolean = true): type => {
   const objectToValidate = object;
 
   const result = schema.validate(objectToValidate, {
@@ -50,6 +50,6 @@ const validateRequest = <type>(
  * @param {*} requireAllFields Whether or not all fields are required
  */
 // TODO: test if this wrapper function still works in typescript
-const validateArray = <type>(arrayOfObjects: object[], schema: joi.ObjectSchema, requireAllFields: boolean = true): type[] => arrayOfObjects.map((item) => validateObject<type>(item, schema, requireAllFields));
+const validateArray = <type>(arrayOfObjects: Record<string, unknown>[], schema: joi.ObjectSchema, requireAllFields: boolean = true): type[] => arrayOfObjects.map((item) => validateObject<type>(item, schema, requireAllFields));
 
 export { validateObject, validateArray, validateRequest };

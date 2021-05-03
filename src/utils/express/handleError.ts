@@ -8,7 +8,7 @@ import { isDev } from '../../env';
 import { CustomError } from '../error/customErrors';
 import throwableError from './throwableError';
 
-interface IErrorResponse {
+declare type ErrorResponse = {
   error: {
     message: string;
     name: string;
@@ -23,7 +23,7 @@ interface IErrorResponse {
  * @param {string} format The format to display the response, by default shows in application/json format
  */
 export default async function handleError(err: Error | CustomError, res: Response, format: string = CONTENTTYPES.JSON): Promise<Response> {
-  let response: IErrorResponse;
+  let response: ErrorResponse;
   const error = !(err instanceof CustomError) ? throwableError(err) : err;
   if (isDev) {
     // development error handler

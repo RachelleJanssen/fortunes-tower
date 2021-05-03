@@ -38,7 +38,7 @@ export async function requestHandler(request: Request): Promise<Request> {
  * @param {String} format the format to display the content in
  * @returns {Promise<Response>} Returns a response, in the form of a promise, through the express response object
  */
-export async function responseHandler(response: Response, content: object, format: string = CONTENTTYPES.JSON): Promise<Response> {
+export async function responseHandler(response: Response, content: Record<string, unknown>, format: string = CONTENTTYPES.JSON): Promise<Response> {
   switch (format) {
     case CONTENTTYPES.APPXML:
     case CONTENTTYPES.TEXTXML:

@@ -12,6 +12,7 @@ export class CustomError extends Error {
   }
 }
 
+export const gameNotFoundError = new CustomError('No game found', 'Game not found', 404);
 export const playerNotFoundError = new CustomError('No player found', 'Player not found', 404);
 
 export const functionNotImplementedError = new CustomError('function not implemented', 'Not implemented', 501);

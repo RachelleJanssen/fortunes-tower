@@ -1,11 +1,14 @@
-import { Express, NextFunction, Request, Response } from 'express';
+import {
+  Express, NextFunction, Request, Response,
+} from 'express';
 import { log } from './utils/logging/logger';
 
-import adminRouter from './routers/adminRouter';
-import gameRouter from './routers/gameRouter';
-// import itemRouter from './REST/items/itemRouter';
+import {
+  GameRouter,
+  PlayerRouter,
+  AdminRouter,
+} from './routers';
 import throwableError from './utils/express/throwableError';
-import playerRoutes from './routers/playerRouter';
 
 function logAPIRequest(req: Request, _res: Response, next: NextFunction): void {
   log().info(
@@ -30,10 +33,9 @@ function cors(_req: Request, res: Response, next: NextFunction): void {
 export default function initApi(app: Express, apiBasePath = '/api'): void {
   app.all('*', logAPIRequest); // all API routes are going through the logger
   app.use(cors);
-  app.use(`${apiBasePath}/game`, gameRouter());
-  // app.use(`${apiBasePath}/collections`, collectionRouter());
-  app.use(`${apiBasePath}/admin`, adminRouter());
-  app.use(`${apiBasePath}/players`, playerRoutes());
+  app.use(`${apiBasePath}/game`, GameRouter.router());
+  app.use(`${apiBasePath}/player`, PlayerRouter.router());
+  app.use(`${apiBasePath}/admin`, AdminRouter.router());
 
   app.use((error: Error, _req: Request, _res: Response, _next: NextFunction) => {
     // This is needed so we also pass the error key and data so the frontend can localize the error

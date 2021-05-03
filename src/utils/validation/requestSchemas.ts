@@ -1,5 +1,5 @@
 import joi from 'joi';
-import { DeckType } from '../../models/card';
+import { DeckType } from '../constants';
 
 export const gameIdQuerySchema = joi.string().max(24);
 
@@ -14,4 +14,4 @@ export const newPlayerSchema = joi.object().keys({
   lastName: joi.string(),
   userName: joi.string().email(),
   games: joi.string(),
-})
+});

@@ -1,12 +1,17 @@
 import { Router } from 'express';
 import * as playerController from '../controllers/playerController';
 
-export default function playerRoutes(): Router {
-  const PlayerRouter = Router();
+export class PlayerRouter {
+  public static router(): Router {
+    const playerRouter = Router();
 
-  PlayerRouter.route('')
-    .get(playerController.listPlayers) // list all Players
-    .post(playerController.createPlayer); // create a new Player
+    playerRouter.route('')
+      .get(playerController.listPlayers) // list all Players
+      .post(playerController.createPlayer); // create a new Player
 
-  return PlayerRouter;
+    playerRouter.route('/:id')
+      .get(playerController.getPlayerDetails);
+
+    return playerRouter;
+  }
 }

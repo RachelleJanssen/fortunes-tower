@@ -1,13 +1,26 @@
-// import semver from 'semver';
+import check from 'check-node-version';
 
-// const packageJSON = require('../package.json') as Record<string, unknown>;
+export default function checkVersion(): void {
+  check(
+    { node: '>= 12' },
+    (error, result) => {
+      if (error) {
+        console.error(error);
+        return;
+      }
 
-// export default function checkVersion(): void {
-//   const engines = packageJSON.engines;
+      if (result.isSatisfied) {
+        console.log('All is well.');
+        return;
+      }
 
-//   const version = engines.node;
-//   if (!semver.satisfies(process.version, version)) {
-//     console.log(`Required node version ${version} not satisfied with current version ${process.version}.`);
-//     process.exit(1);
-//   }
-// }
+      console.error('Some package version(s) failed!');
+
+      Object.keys(result.versions).forEach((packageName) => {
+        if (!result.versions[packageName].isSatisfied) {
+          console.error(`Missing ${packageName}.`);
+        }
+      });
+    },
+  );
+}

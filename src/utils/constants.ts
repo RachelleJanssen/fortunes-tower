@@ -29,3 +29,26 @@ export const HTTPMETHODS = {
   DELETE: 'DELETE',
   PATCH: 'PATCH',
 };
+
+/**
+ * Valid cards and their values
+ */
+export enum CardValues {
+  HERO = 0,
+  ONE = 1,
+  TWO = 2,
+  THREE = 3,
+  FOUR = 4,
+  FIVE = 5,
+  SIX = 6,
+  SEVEN = 7,
+}
+
+/**
+ * Valid card deck types
+ */
+export enum DeckType {
+  EMERALD = 'Emerald',
+  RUBY = 'Ruby',
+  DIAMOND = 'Diamond',
+}

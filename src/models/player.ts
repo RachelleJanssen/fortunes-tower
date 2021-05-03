@@ -1,5 +1,5 @@
-import { Game } from './game'
-import { prop, Ref, getModelForClass } from '@typegoose/typegoose'
+import { prop, Ref, getModelForClass } from '@typegoose/typegoose';
+import { Game } from './game';
 
 export interface IPlayer {
   firstName: string
@@ -18,7 +18,7 @@ export class Player implements IPlayer {
   @prop()
   public userName!: string;
 
-  @prop({ ref: 'Game', required: true})
+  @prop({ ref: 'Game', required: true })
   public games!: Ref<Game>[]; // This is a Reference Array
 }
 
